@@ -25,7 +25,7 @@ public class Ex1 {
                 Class.forName("com.mysql.cj.jdbc.Driver");
 
                 // TODO: check what to do with password for root
-                con = DriverManager.getConnection(connectionURL, "root", "Daniel@1997");
+                con = DriverManager.getConnection(connectionURL, "root", "root");
 
                 System.out.println("Connection successful!");
 
@@ -47,23 +47,16 @@ public class Ex1 {
         System.out.println("Enter movie title:");
         String title = input.nextLine();
 
-        System.out.println("Enter movie description (or leave empty for default):");
-        String description = input.nextLine();
-        if (description.isEmpty()) {
-            description = "No description available"; // Default value
-        }
+        int defualt_language_id = 1;
 
-        System.out.println("Enter movie release year:");
-        int year = input.nextInt();
-        input.nextLine();  // Consume newline left-over
+
 
         // Prepare SQL insert query
-        String sql = "INSERT INTO film (title, description, release_year) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO film (title, language_id) VALUES (?, ?)";
 
         try (PreparedStatement pstmt = con.prepareStatement(sql)) {
             pstmt.setString(1, title);
-            pstmt.setString(2, description);
-            pstmt.setInt(3, year);
+            pstmt.setInt(2, defualt_language_id);
 
             // Execute the query
             int rowsAffected = pstmt.executeUpdate();
@@ -134,16 +127,16 @@ public class Ex1 {
             // Print result
             ResultSetMetaData rsmd = rs.getMetaData();
             int columnCount = rsmd.getColumnCount();
+            int counter=0;
             while (rs.next()) {
+                counter++;
                 for (int i = 1; i <= columnCount; i++) {
                     System.out.print(rs.getString(i) + "\t");
                 }
                 System.out.println();
             }
 
-            // Count the number of rows returned
-            rs.last();
-            System.out.println("Number of rows returned: " + rs.getRow());
+            System.out.println("Number of rows returned: " + counter);
         } catch (SQLException e) {
             System.out.println("Error executing query: " + e.getMessage());
         }
@@ -238,7 +231,7 @@ public class Ex1 {
                             case "c":
                                 System.out.println("Enter the language:");
                                 String language = input.nextLine();
-                                pstmt = con.prepareStatement("SELECT film.* FROM film INNER JOIN language ON film.language_id = language.language_id WHERE language.name = ?");
+                                pstmt = con.prepareStatement("SELECT * FROM film INNER JOIN language ON film.language_id = language.language_id WHERE language.name = ?");
                                 pstmt.setString(1, language);
                                 break;
 
@@ -246,12 +239,12 @@ public class Ex1 {
                                 System.out.println("Enter the exact number of actors:");
                                 int numActors = input.nextInt();
                                 input.nextLine(); // Consume newline
-                                pstmt = con.prepareStatement("SELECT film.* FROM film WHERE film_id IN (SELECT film_id FROM film_actor GROUP BY film_id HAVING COUNT(actor_id) = ?)");
+                                pstmt = con.prepareStatement("SELECT * FROM film WHERE film_id IN (SELECT film_id FROM film_actor GROUP BY film_id HAVING COUNT(actor_id) = ?)");
                                 pstmt.setInt(1, numActors);
                                 break;
 
                             case "e":
-                                pstmt = con.prepareStatement("SELECT film * FROM film WHERE AND film_id NOT IN (SELECT film_id FROM film_actor INNER JOIN actor ON film_actor.actor_id = actor.actor_id WHERE actor.first_name = 'Robert' AND actor.last_name = 'De Niro')");
+                                pstmt = con.prepareStatement(("SELECT film.* FROM film WHERE language_id = (SELECT language_id FROM language WHERE name = 'English') AND film_id NOT IN (SELECT film_id FROM film_actor INNER JOIN actor ON film_actor.actor_id = actor.actor_id WHERE actor.first_name = 'Robert' AND actor.last_name = 'De Niro')"));
                                 break;
 
                             case "f":
