@@ -1,3 +1,6 @@
+// Or Bar Califa 318279429
+// Daniel Fradkin 316410885
+
 import java.sql.*;
 import java.util.Scanner;
 import java.sql.PreparedStatement;
@@ -122,43 +125,31 @@ public class Ex1 {
         String query = input.nextLine();
 
         try (Statement stmt = con.createStatement()) {
-            ResultSet rs = stmt.executeQuery(query);
+            // Determine the type of query based on the first word
+            String queryType = query.trim().split(" ")[0].toUpperCase();
 
-            // Print result
-            ResultSetMetaData rsmd = rs.getMetaData();
-            int columnCount = rsmd.getColumnCount();
-            int counter=0;
-            while (rs.next()) {
-                counter++;
-                for (int i = 1; i <= columnCount; i++) {
-                    System.out.print(rs.getString(i) + "\t");
+            if ("SELECT".equals(queryType)) {
+                // Handle SELECT queries
+                ResultSet rs = stmt.executeQuery(query);
+
+                // Print result
+                ResultSetMetaData rsmd = rs.getMetaData();
+                int columnCount = rsmd.getColumnCount();
+                int counter = 0;
+                while (rs.next()) {
+                    counter++;
+                    for (int i = 1; i <= columnCount; i++) {
+                        System.out.print(rs.getString(i) + "\t");
+                    }
+                    System.out.println();
                 }
-                System.out.println();
+
+                System.out.println("Number of rows returned: " + counter);
+            } else {
+                // Handle UPDATE, INSERT, DELETE queries
+                int rowsAffected = stmt.executeUpdate(query);
+                System.out.println("Query executed successfully. Rows affected: " + rowsAffected);
             }
-
-            System.out.println("Number of rows returned: " + counter);
-        } catch (SQLException e) {
-            System.out.println("Error executing query: " + e.getMessage());
-        }
-    }
-    public void searchMoviesByTitle() {
-        Scanner input = new Scanner(System.in);
-        System.out.println("Enter a word to search in the movie title:");
-        String searchWord = input.nextLine();
-
-        String sql = "SELECT * FROM film WHERE title LIKE ?";
-
-        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
-            pstmt.setString(1, "%" + searchWord + "%");
-
-            ResultSet rs = pstmt.executeQuery();
-            while (rs.next()) {
-                System.out.println("Movie ID: " + rs.getInt("film_id") + ", Title: " + rs.getString("title"));
-            }
-
-            // Count the number of rows returned
-            rs.last();
-            System.out.println("Number of movies found: " + rs.getRow());
         } catch (SQLException e) {
             System.out.println("Error executing query: " + e.getMessage());
         }
@@ -209,8 +200,8 @@ public class Ex1 {
                     String Qchoice = input.nextLine();
 
                     try {
-                        PreparedStatement pstmt = null;
-                        ResultSet rs = null;
+                        PreparedStatement pstmt;
+                        ResultSet rs;
 
                         switch (Qchoice) {
                             case "a":
